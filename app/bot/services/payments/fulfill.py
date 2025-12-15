@@ -17,9 +17,15 @@ from ...callbacks import MenuCb
 log = logging.getLogger(__name__)
 
 
-async def _send_screen(bot: Bot, settings: Settings, user_id: int, text: str, *, photo_path: str | None = None,
-                       reply_markup: InlineKeyboardMarkup | None = None) -> None:
-    # delete last screen
+async def _send_screen(
+    bot: Bot,
+    settings: Settings,
+    user_id: int,
+    text: str,
+    *,
+    photo_path: str | None = None,
+    reply_markup: InlineKeyboardMarkup | None = None,
+) -> None:
     try:
         last_chat_id, last_msg_id = await repo.get_last_screen(settings.db_path_abs, user_id)
         if last_chat_id and last_msg_id:
@@ -61,10 +67,10 @@ def _fmt_local(settings: Settings, iso_utc_naive: str) -> str:
 
 
 async def fulfill_paid_order(bot: Bot, settings: Settings, order) -> None:
-    """
-    order — объект из repo.get_created_orders()
-    Делает всё: mark paid -> subscription -> invite -> сообщение пользователю + админу
-    """
+    # защита от дублей: если уже не created — ничего не делаем
+    if getattr(order, "status", "created") != "created":
+        return
+
     await repo.mark_order_paid(settings.db_path_abs, order.id)
 
     now_utc = datetime.utcnow()
@@ -101,7 +107,7 @@ async def fulfill_paid_order(bot: Bot, settings: Settings, order) -> None:
 
     user_text = (
         "✅ *Оплата прошла успешно!*\n\n"
-        f"🧾 *Заказ:* {order.id}\n"
+        f"🧾 *Заказ:* `{order.id}`\n"
         f"💰 *Сумма:* {order.price_rub}₽\n"
         f"🏷️ *Тариф:* {order.tariff_code}\n"
         f"{period_line}\n"
@@ -125,11 +131,11 @@ async def fulfill_paid_order(bot: Bot, settings: Settings, order) -> None:
                 (
                     "✅ *Оплата получена!*\n\n"
                     f"👤 *User ID:* {order.user_id}\n"
-                    f"🧾 *Заказ:* {order.id}\n"
+                    f"🧾 *Заказ:* `{order.id}`\n"
                     f"💰 *Сумма:* {order.price_rub}₽\n"
                     f"🏷️ *Тариф:* {order.tariff_code}\n"
-                    f"💳 *Провайдер:* {order.provider.upper()}\n"
-                    f"📌 *Subscription:* {sub.id}\n"
+                    f"💳 *Провайдер:* `{order.provider.upper()}`\n"
+                    f"📌 *Subscription:* `{sub.id}`\n"
                 ),
             )
         except Exception:
