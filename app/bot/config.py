@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     CRYPTOBOT_TOKEN: str = Field(default="")
     CACTUSPAY_API_KEY: str = Field(default="")
     CACTUSPAY_SHOP_ID: str = Field(default="")
-
+    WEBHOOK_SECRET: str = Field(default="")
     # App
     DB_PATH: str = Field(default="bot.db")  # можно относительный, будет резолвиться от BASE_DIR
     ORDER_TTL_MINUTES: int = Field(default=10)
